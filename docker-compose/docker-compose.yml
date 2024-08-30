@@ -1,0 +1,40 @@
+services:
+  employees:
+    image: inkollusrivarsha262/employee-service:1.0.0
+    container_name: employees
+    ports:
+      - 8090:8090
+    depends_on:
+      config-server:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_CONFIG_IMPORT: "configserver:http://config-server:8071"
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+      - ems
+  config-server:
+    image: inkollusrivarsha262/config-server:1.0.0
+    container_name: config-server
+    ports:
+      - 8071:8071
+    healthcheck:
+      test: "curl --fail --silent localhost:8071/actuator/readiness | grep UP || exit 0"
+      timeout: 10s
+      retries: 5
+      interval: 10s
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          memory: 700m
+    networks:
+        - ems
+
+networks:
+  ems:
+    driver: bridge
+
